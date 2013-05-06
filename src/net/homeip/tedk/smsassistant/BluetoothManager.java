@@ -1,8 +1,5 @@
 package net.homeip.tedk.smsassistant;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Semaphore;
-
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
@@ -11,9 +8,13 @@ import android.telephony.TelephonyManager;
 import android.view.KeyEvent;
 
 public class BluetoothManager implements OnAudioFocusChangeListener {
+    
+    public interface OnReadyListener {
+	public void onReady();
+    }
 
-    private CountDownLatch latch = new CountDownLatch(1);
-
+    private OnReadyListener onReadyListener;
+    
     private boolean musicWasPlaying = false;
     private boolean speakerPhoneWasOn = false;
 
@@ -32,7 +33,8 @@ public class BluetoothManager implements OnAudioFocusChangeListener {
 	return (tm.getCallState() == TelephonyManager.CALL_STATE_IDLE);
     }
 
-    public void start() {
+    public void start(OnReadyListener listener) {
+	this.onReadyListener = listener;
 	musicWasPlaying = am.isMusicActive();
 
 	if (musicWasPlaying) {
@@ -53,11 +55,7 @@ public class BluetoothManager implements OnAudioFocusChangeListener {
 
 	am.requestAudioFocus(BluetoothManager.this,
 		AudioManager.STREAM_VOICE_CALL, AudioManager.AUDIOFOCUS_GAIN);
-
-	try { 
-	    latch.await();
-	} catch (InterruptedException e) {
-	}
+	onReadyListener.onReady();
     }
 
     public void stop() {
@@ -88,15 +86,15 @@ public class BluetoothManager implements OnAudioFocusChangeListener {
     public void onAudioFocusChange(int focusChange) {
 	switch (focusChange) {
 	case AudioManager.AUDIOFOCUS_GAIN:
-	    latch.countDown();
+//	    onReadyListener.onReady();
 	    break;
 
 	case AudioManager.AUDIOFOCUS_GAIN_TRANSIENT:
-	    latch.countDown();
+//	    onReadyListener.onReady();
 	    break;
 
 	case AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK:
-	    latch.countDown();
+//	    onReadyListener.onReady();
 	    break;
 
 	case AudioManager.AUDIOFOCUS_LOSS:

@@ -1,8 +1,6 @@
 package net.homeip.tedk.smsassistant;
 
 import java.util.HashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Semaphore;
 
 import android.content.Context;
 import android.media.AudioManager;
@@ -12,7 +10,15 @@ import android.speech.tts.UtteranceProgressListener;
 
 public class TtsManager extends UtteranceProgressListener {
     
-    private CountDownLatch latch = new CountDownLatch(1);
+    public interface OnReadyListener {
+	public void onReady();
+    }
+    public interface OnCompleteListener {
+	public void onComplete();
+    }
+    
+    private OnReadyListener onReadyListener;
+    private OnCompleteListener onCompleteListener;
 
     private int currentId = 0;
 
@@ -23,24 +29,22 @@ public class TtsManager extends UtteranceProgressListener {
 	this.context = context;
     }
 
-    public void start() {
+    public void start(OnReadyListener listener) {
+	this.onReadyListener = listener;
 	tts = new TextToSpeech(context, new TextToSpeech.OnInitListener() {
 	    public void onInit(int status) {
 		tts.setOnUtteranceProgressListener(TtsManager.this);
-		latch.countDown();
+		onReadyListener.onReady();
 	    }
 	});
-	try { 
-	    latch.await();
-	} catch (InterruptedException e) {
-	}
     }
 
     public void stop() {
 	tts.stop();
     }
 
-    public void speak(final String text) {
+    public void speak(final String text, OnCompleteListener listener) {
+	this.onCompleteListener = listener;
 	final HashMap<String, String> hashMap = new HashMap<String, String>();
 	hashMap.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID,
 		String.valueOf(currentId++));
@@ -62,22 +66,18 @@ public class TtsManager extends UtteranceProgressListener {
 	    }
 
 	}.start();
-	try { 
-	    latch.await();
-	} catch (InterruptedException e) {
-	}
     }
 
     @Override
     public void onDone(String utteranceId) {
 	stop();
-	latch.countDown();
+	onCompleteListener.onComplete();
     }
 
     @Override
     public void onError(String utteranceId) {
 	stop();
-	latch.countDown();
+	onCompleteListener.onComplete();
     }
 
     @Override

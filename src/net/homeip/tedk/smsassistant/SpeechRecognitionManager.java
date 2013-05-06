@@ -1,7 +1,6 @@
 package net.homeip.tedk.smsassistant;
 
 import java.util.ArrayList;
-import java.util.concurrent.CountDownLatch;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -15,10 +14,13 @@ import android.speech.RecognizerIntent;
  */
 public class SpeechRecognitionManager extends Activity {
     
-    private CountDownLatch latch = new CountDownLatch(1);
+    public interface OnCompleteListener {
+	public void onComplete(String[] results);
+    }
+    
+    private OnCompleteListener onCompleteListener;
     
     private int currentId;
-    private volatile String[] result = null;
     
     private Context context;
     
@@ -38,13 +40,9 @@ public class SpeechRecognitionManager extends Activity {
 	return false;
     }
 
-    public String[] listen() {
+    public void listen(OnCompleteListener listener) {
+	this.onCompleteListener = listener;
 	context.startActivity(new Intent(context, this.getClass()));
-	try { 
-	    latch.await();
-	} catch (InterruptedException e) {
-	}
-	return result;
     }
     
     @Override
@@ -91,18 +89,14 @@ public class SpeechRecognitionManager extends Activity {
 	    if(resultCode == RESULT_OK) {
 		ArrayList<String> results = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
 		if(results == null) {
-		    result = null;
-		    latch.countDown();
+		    onCompleteListener.onComplete(null);
 		} else if (results.size() < 1){
-		    result = null;
-		    latch.countDown();
+		    onCompleteListener.onComplete(null);
 		} else {
-		    result = (String[]) results.toArray();
-		    latch.countDown();
+		    onCompleteListener.onComplete((String[]) results.toArray());
 		}
 	    } else {
-		result = null;
-		latch.countDown();
+		onCompleteListener.onComplete(null);
 	    }
 	}
 	finish();
