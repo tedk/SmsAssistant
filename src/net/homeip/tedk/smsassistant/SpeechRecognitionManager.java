@@ -3,16 +3,17 @@ package net.homeip.tedk.smsassistant;
 import java.util.ArrayList;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 
 /**
  *  VoiceRecognition API Demo
  */
-public class SpeechRecognitionManager extends Activity {
+public class SpeechRecognitionManager implements RecognitionListener {
     
     public interface OnCompleteListener {
 	public void onComplete(String[] results);
@@ -20,12 +21,13 @@ public class SpeechRecognitionManager extends Activity {
     
     private OnCompleteListener onCompleteListener;
     
-    private int currentId;
-    
     private Context context;
+    private SpeechRecognizer sr;
     
-    public void start(Context context) {
+    public SpeechRecognitionManager(Context context) {
 	this.context = context;
+	sr = SpeechRecognizer.createSpeechRecognizer(context);       
+        sr.setRecognitionListener(this);
     }
     
     @SuppressLint("DefaultLocale")
@@ -42,66 +44,53 @@ public class SpeechRecognitionManager extends Activity {
 
     public void listen(OnCompleteListener listener) {
 	this.onCompleteListener = listener;
-	context.startActivity(new Intent(context, this.getClass()));
-    }
-    
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        
-	Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-
-	// Specify the calling package to identify your application
-	intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getClass()
-		.getPackage().getName());
-
-	// Display an hint to the user about what he should say.
-	intent.putExtra(RecognizerIntent.EXTRA_PROMPT,
-		"Say a command");
-
-	// Given an hint to the recognizer about what the user is going to say
-	intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-		RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-
-	// Specify how many results you want to receive. The results will be
-	// sorted
-	// where the first result is the one with higher confidence.
-//	intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
-
-	// Specify the recognition language. This parameter has to be specified
-	// only if the
-	// recognition has to be done in a specific language and not the default
-	// one (i.e., the
-	// system locale). Most of the applications do not have to set this
-	// parameter.
-//	if (!mSupportedLanguageView.getSelectedItem().toString()
-//		.equals("Default")) {
-//	    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,
-//		    mSupportedLanguageView.getSelectedItem().toString());
-//	}
-
-	startActivityForResult(intent, currentId++);
-    }
-    
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-	if(requestCode == currentId) {
-	    if(resultCode == RESULT_OK) {
-		ArrayList<String> results = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-		if(results == null) {
-		    onCompleteListener.onComplete(null);
-		} else if (results.size() < 1){
-		    onCompleteListener.onComplete(null);
-		} else {
-		    onCompleteListener.onComplete((String[]) results.toArray());
-		}
-	    } else {
-		onCompleteListener.onComplete(null);
-	    }
-	}
-	finish();
 	
-        super.onActivityResult(requestCode, resultCode, data);
+	Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);        
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.getPackageName());
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Say a command");
+        sr.startListening(intent);
     }
+
+    public void onBeginningOfSpeech() {
+	
+    }
+
+    public void onBufferReceived(byte[] buffer) {
+	
+    }
+
+    public void onEndOfSpeech() {
+	
+    }
+
+    public void onError(int error) {
+	
+    }
+
+    public void onEvent(int eventType, Bundle params) {
+	
+    }
+
+    public void onPartialResults(Bundle partialResults) {
+	
+    }
+
+    public void onReadyForSpeech(Bundle params) {
+	
+    }
+
+    public void onResults(Bundle results) {
+	ArrayList<String> data = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+	if(data == null || data.size() < 1) {
+	    onCompleteListener.onComplete(null);
+	} else {
+	    onCompleteListener.onComplete((String[]) data.toArray());
+	}
+    }
+
+    public void onRmsChanged(float rmsdB) {
+	
+    } 
 
 }

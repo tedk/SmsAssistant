@@ -15,12 +15,16 @@ public class TestActivity extends Activity {
 	super.onCreate(savedInstanceState);
 	setContentView(R.layout.test);
 
-	final MessageHandler mh = new MessageHandler(this);
-
 	Button b = (Button) findViewById(R.id.testButton);
 	b.setOnClickListener(new OnClickListener() {
 	    public void onClick(View v) {
-		mh.handle("Ted Krofssik", "Hello. This is a test message.");
+		new MessageHandler(TestActivity.this).handle("Ted Krofssik", "Hello. This is a test message.");
+//		SpeechRecognitionManager srm = new SpeechRecognitionManager(TestActivity.this);
+//		srm.listen(new SpeechRecognitionManager.OnCompleteListener() {
+//		    public void onComplete(String[] results) {
+//		        new AlertDialog.Builder(TestActivity.this).setTitle("Result").setMessage(results == null ? "null" : results[0]).setNeutralButton("Close", null).show();
+//		    }
+//		});
 	    }
 	});
     }
