@@ -5,9 +5,15 @@
     android:orientation="vertical" >
     
     <Button
-        android:id="@+id/testButton"
+        android:id="@+id/testSpeechButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Test" />
+        android:text="Test Speech" />
+    
+    <Button
+        android:id="@+id/testMessageButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Test Message" />
 
 </LinearLayout>

@@ -48,6 +48,7 @@ public class TtsManager extends UtteranceProgressListener {
 	final HashMap<String, String> hashMap = new HashMap<String, String>();
 	hashMap.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID,
 		String.valueOf(currentId++));
+	hashMap.put(TextToSpeech.Engine.KEY_PARAM_VOLUME, String.valueOf(1.f));
 	hashMap.put(TextToSpeech.Engine.KEY_PARAM_STREAM,
 		String.valueOf(AudioManager.STREAM_VOICE_CALL));
 
