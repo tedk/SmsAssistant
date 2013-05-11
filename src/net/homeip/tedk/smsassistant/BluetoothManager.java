@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.AudioManager.OnAudioFocusChangeListener;
+import android.os.Handler;
 import android.telephony.TelephonyManager;
 import android.view.KeyEvent;
 
@@ -23,12 +24,14 @@ public class BluetoothManager implements OnAudioFocusChangeListener,
     private boolean speakerPhoneWasOn = false;
 
     private Context context;
+    private Handler handler;
     private AudioManager am;
     private TelephonyManager tm;
     private BluetoothHeadset bh;
 
     public BluetoothManager(Context context) {
 	this.context = context;
+	this.handler = new Handler();
 	am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
 	tm = (TelephonyManager) context
 		.getSystemService(Context.TELEPHONY_SERVICE);
@@ -54,6 +57,8 @@ public class BluetoothManager implements OnAudioFocusChangeListener,
 	    context.sendOrderedBroadcast(downIntent2, null);
 	}
 
+	setVolumes(true);
+
 	if (am.isBluetoothScoAvailableOffCall()) {
 	    am.startBluetoothSco();
 	}
@@ -64,7 +69,13 @@ public class BluetoothManager implements OnAudioFocusChangeListener,
 
 	am.requestAudioFocus(BluetoothManager.this,
 		AudioManager.STREAM_VOICE_CALL, AudioManager.AUDIOFOCUS_GAIN);
-	onReadyListener.onReady();
+
+	handler.postDelayed(new Runnable() {
+	    public void run() {
+		onReadyListener.onReady();
+	    }
+	}, 2000);
+
     }
 
     public void stop() {
@@ -82,6 +93,8 @@ public class BluetoothManager implements OnAudioFocusChangeListener,
 	am.abandonAudioFocus(BluetoothManager.this);
 	am.setMode(AudioManager.MODE_NORMAL);
 
+	setVolumes(false);
+
 	if (musicWasPlaying) {
 
 	    Intent intent = new Intent(Intent.ACTION_MEDIA_BUTTON, null);
@@ -92,34 +105,19 @@ public class BluetoothManager implements OnAudioFocusChangeListener,
 
 	}
 
-	am.setMode(AudioManager.MODE_NORMAL);
     }
-    
+
+    private void setVolumes(boolean on) {
+	am.setStreamMute(AudioManager.STREAM_NOTIFICATION, on);
+	am.setStreamMute(AudioManager.STREAM_VOICE_CALL, false);
+	am.setStreamSolo(AudioManager.STREAM_VOICE_CALL, on);
+	am.setStreamVolume(AudioManager.STREAM_VOICE_CALL,
+		am.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL), 0);
+    }
+
     public BluetoothHeadset getBluetoothHeadset() {
 	return bh;
     }
-    
-//    public static void startVoiceRecognition(BluetoothHeadset bh) {
-//	if(bh == null)
-//	    return;
-//	
-//	for(BluetoothDevice bd : bh.getConnectedDevices()) {
-//	    if(bh.isAudioConnected(bd)) {
-//		bh.startVoiceRecognition(bd);
-//	    }
-//	}
-//    }
-//    
-//    public static void stopVoiceRecognition(BluetoothHeadset bh) {
-//	if(bh == null)
-//	    return;
-//	
-//	for(BluetoothDevice bd : bh.getConnectedDevices()) {
-//	    if(bh.isAudioConnected(bd)) {
-//		bh.stopVoiceRecognition(bd);
-//	    }
-//	}
-//    }
 
     public void onAudioFocusChange(int focusChange) {
 	switch (focusChange) {

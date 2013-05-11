@@ -18,16 +18,16 @@ public class MessageHandler {
     private TtsManager.OnReadyListener ttsReadyListener = new TtsManager.OnReadyListener() {
 	public void onReady() {
 	    tm.speak("New message from " + sender, ttsCompleteListener);
-	    
 	}
     };
+    
     private TtsManager.OnCompleteListener ttsCompleteListener = new TtsManager.OnCompleteListener() {
 	public void onComplete() {
-	    Mode nextMode = mode;
 	    switch(mode) {
 	    case ANNOUNCE:
-		nextMode = Mode.READ;
+		mode = Mode.READ;
 		tm.speak(message, ttsCompleteListener);
+		break;
 	    case READ:
 		stop();
 		break;
@@ -35,11 +35,10 @@ public class MessageHandler {
 		stop();
 		break;
 	    }
-	    mode = nextMode;
 	}
     };
     
-    private Mode mode;
+    private volatile Mode mode;
     private BluetoothManager bm;
     private TtsManager tm;
     

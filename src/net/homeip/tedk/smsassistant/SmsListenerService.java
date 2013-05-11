@@ -7,11 +7,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.provider.ContactsContract.PhoneLookup;
+import android.provider.ContactsContract.CommonDataKinds.Email;
+import android.provider.ContactsContract.CommonDataKinds.Phone;
+import android.provider.ContactsContract.Data;
 import android.telephony.SmsMessage;
 
 public class SmsListenerService extends Service {
@@ -32,24 +33,7 @@ public class SmsListenerService extends Service {
 		    String body = smsmsg.getDisplayMessageBody();
 		    String source = smsmsg.getDisplayOriginatingAddress();
 
-		    Uri uri = Uri.withAppendedPath(
-			    PhoneLookup.CONTENT_FILTER_URI, Uri.encode(source));
-		    Cursor c = getContentResolver().query(uri,
-			    new String[] { PhoneLookup.DISPLAY_NAME }, null,
-			    null, null);
-		    try {
-			c.moveToFirst();
-			if(!c.isAfterLast() && c.getColumnCount() > 0) {
-			    String displayName = c.getString(0);
-			    if(displayName != null && displayName.length() > 0) {
-				source = displayName;
-			    }
-			}
-		    } finally {
-			c.close();
-		    }
-
-		    new MessageHandler(context).handle(source, body);
+		    new MessageHandler(context).handle(getDisplayName(source), body);
 
 		}
 
@@ -59,10 +43,36 @@ public class SmsListenerService extends Service {
 
     };
 
+    private String getDisplayName(String source) {
+	Cursor c = getContentResolver().query(
+		Data.CONTENT_URI,
+		new String[] { Phone.DISPLAY_NAME },
+		"( " + Data.MIMETYPE + "=? AND " + Phone.NUMBER + "=? ) OR ( "
+			+ Data.MIMETYPE + "=? AND " + Email.ADDRESS + "=? )",
+		new String[] { Phone.CONTENT_ITEM_TYPE, source, Email.CONTENT_ITEM_TYPE, source },
+		null);
+	try {
+	    if (c != null) {
+		for(c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+		    String displayName = c.getString(0);
+		    if(displayName != null && displayName.length() > 0) {
+			return displayName;
+		    }
+		}
+	    }
+	} finally {
+	    if (c != null) {
+		c.close();
+	    }
+	}
+	
+	return source;
+    }
+
     @Override
     public void onCreate() {
 	super.onCreate();
-
+	
 	IntentFilter intentFilter = new IntentFilter();
 	intentFilter.addAction("android.provider.Telephony.SMS_RECEIVED");
 	registerReceiver(smsReceiver, intentFilter);
@@ -77,7 +87,8 @@ public class SmsListenerService extends Service {
 		new Notification.Builder(this)
 			.setSmallIcon(android.R.drawable.sym_def_app_icon)
 			.setContentTitle("SMS Assistant")
-			.setContentText("Running...").setOngoing(true).getNotification());
+			.setContentText("Running...").setOngoing(true)
+			.getNotification());
 
 	return START_STICKY;
     }

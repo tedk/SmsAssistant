@@ -4,29 +4,33 @@ import java.util.HashMap;
 
 import android.content.Context;
 import android.media.AudioManager;
-import android.os.CountDownTimer;
+import android.os.Handler;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
+import android.util.Log;
 
 public class TtsManager extends UtteranceProgressListener {
-    
+
     public interface OnReadyListener {
 	public void onReady();
     }
+
     public interface OnCompleteListener {
 	public void onComplete();
     }
-    
+
     private OnReadyListener onReadyListener;
     private OnCompleteListener onCompleteListener;
 
-    private int currentId = 0;
+    private int currentId = 1;
 
     private Context context;
+    private Handler handler;
     private TextToSpeech tts;
 
     public TtsManager(Context context) {
 	this.context = context;
+	this.handler = new Handler();
     }
 
     public void start(OnReadyListener listener) {
@@ -37,6 +41,11 @@ public class TtsManager extends UtteranceProgressListener {
 		onReadyListener.onReady();
 	    }
 	});
+    }
+
+    public void restart(OnReadyListener listener) {
+	stop();
+	start(listener);
     }
 
     public void stop() {
@@ -52,21 +61,15 @@ public class TtsManager extends UtteranceProgressListener {
 	hashMap.put(TextToSpeech.Engine.KEY_PARAM_STREAM,
 		String.valueOf(AudioManager.STREAM_VOICE_CALL));
 
-	new CountDownTimer(1000, 1000 / 2) {
-	    @Override
-	    public void onFinish() {
+	handler.post(new Runnable() {
+	    public void run() {
 		try {
 		    tts.speak(text, TextToSpeech.QUEUE_ADD, hashMap);
 		} catch (Exception e) {
-
+		    Log.e("TtsManager", "Speaking Exception", e);
 		}
 	    }
-
-	    @Override
-	    public void onTick(long arg0) {
-	    }
-
-	}.start();
+	});
     }
 
     @Override
