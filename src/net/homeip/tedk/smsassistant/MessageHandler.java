@@ -9,33 +9,25 @@ public class MessageHandler {
 	READ,
     }
 
-    private class BluetoothListener implements BluetoothManager.OnReadyListener {
+    private BluetoothManager.OnReadyListener bluetoothReadyListener = new BluetoothManager.OnReadyListener() {
 	public void onReady() {
-	    BluetoothManager.startVoiceRecognition(bm.getBluetoothHeadset());
-	    tm.start(tl);
+	    tm.start(ttsReadyListener);
 	}
-    }
+    };
     
-    private class SpeechRecognitionListener implements SpeechRecognitionManager.OnCompleteListener {
-	public void onComplete(String[] results) {
-	    if(SpeechRecognitionManager.contains(results, "READ")) {
-		mode = Mode.READ;
-		tm.speak(message, tl);
-	    } else {
-		stop();
-	    }
-	}
-    }
-    
-    private class TtsListener implements TtsManager.OnReadyListener, TtsManager.OnCompleteListener {
+    private TtsManager.OnReadyListener ttsReadyListener = new TtsManager.OnReadyListener() {
 	public void onReady() {
-	    tm.speak("New message from " + sender, tl);
+	    tm.speak("New message from " + sender, ttsCompleteListener);
 	    
 	}
+    };
+    private TtsManager.OnCompleteListener ttsCompleteListener = new TtsManager.OnCompleteListener() {
 	public void onComplete() {
+	    Mode nextMode = mode;
 	    switch(mode) {
 	    case ANNOUNCE:
-		srm.listen(srl);
+		nextMode = Mode.READ;
+		tm.speak(message, ttsCompleteListener);
 	    case READ:
 		stop();
 		break;
@@ -43,23 +35,19 @@ public class MessageHandler {
 		stop();
 		break;
 	    }
+	    mode = nextMode;
 	}
-    }
+    };
     
     private Mode mode;
     private BluetoothManager bm;
-    private SpeechRecognitionManager srm;
     private TtsManager tm;
-    private BluetoothListener bl = new BluetoothListener();
-    private SpeechRecognitionListener srl = new SpeechRecognitionListener();
-    private TtsListener tl = new TtsListener();
     
     private String sender;
     private String message;
     
     public MessageHandler(Context context) {
 	bm = new BluetoothManager(context);
-	srm = new SpeechRecognitionManager(context);
 	tm = new TtsManager(context);
     }
     
@@ -70,12 +58,11 @@ public class MessageHandler {
 	if(!bm.isAvailable())
 	    return;
 	
-	bm.start(bl);
+	bm.start(bluetoothReadyListener);
     }
     
     public void stop() {
 	tm.stop();
-	BluetoothManager.stopVoiceRecognition(bm.getBluetoothHeadset());
 	bm.stop();
     }
 

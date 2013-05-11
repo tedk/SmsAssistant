@@ -100,27 +100,27 @@ public class BluetoothManager implements OnAudioFocusChangeListener,
 	return bh;
     }
     
-    public static void startVoiceRecognition(BluetoothHeadset bh) {
-	if(bh == null)
-	    return;
-	
-	for(BluetoothDevice bd : bh.getConnectedDevices()) {
-	    if(bh.isAudioConnected(bd)) {
-		bh.startVoiceRecognition(bd);
-	    }
-	}
-    }
-    
-    public static void stopVoiceRecognition(BluetoothHeadset bh) {
-	if(bh == null)
-	    return;
-	
-	for(BluetoothDevice bd : bh.getConnectedDevices()) {
-	    if(bh.isAudioConnected(bd)) {
-		bh.stopVoiceRecognition(bd);
-	    }
-	}
-    }
+//    public static void startVoiceRecognition(BluetoothHeadset bh) {
+//	if(bh == null)
+//	    return;
+//	
+//	for(BluetoothDevice bd : bh.getConnectedDevices()) {
+//	    if(bh.isAudioConnected(bd)) {
+//		bh.startVoiceRecognition(bd);
+//	    }
+//	}
+//    }
+//    
+//    public static void stopVoiceRecognition(BluetoothHeadset bh) {
+//	if(bh == null)
+//	    return;
+//	
+//	for(BluetoothDevice bd : bh.getConnectedDevices()) {
+//	    if(bh.isAudioConnected(bd)) {
+//		bh.stopVoiceRecognition(bd);
+//	    }
+//	}
+//    }
 
     public void onAudioFocusChange(int focusChange) {
 	switch (focusChange) {
