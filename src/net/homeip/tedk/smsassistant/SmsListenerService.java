@@ -30,8 +30,8 @@ public class SmsListenerService extends Service {
 		    SmsMessage smsmsg = SmsMessage
 			    .createFromPdu((byte[]) smsextras[i]);
 
-		    String body = smsmsg.getDisplayMessageBody();
-		    String source = smsmsg.getDisplayOriginatingAddress();
+		    String body = smsmsg.isEmail() ? smsmsg.getDisplayMessageBody() : smsmsg.getMessageBody();
+		    String source = smsmsg.isEmail() ? smsmsg.getDisplayOriginatingAddress() : smsmsg.getOriginatingAddress();
 
 		    new MessageHandler(context).handle(getDisplayName(source), body);
 
