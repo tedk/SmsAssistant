@@ -30,10 +30,11 @@ public class SmsListenerService extends Service {
 		    SmsMessage smsmsg = SmsMessage
 			    .createFromPdu((byte[]) smsextras[i]);
 
-		    String body = smsmsg.isEmail() ? smsmsg.getDisplayMessageBody() : smsmsg.getMessageBody();
-		    String source = smsmsg.isEmail() ? smsmsg.getDisplayOriginatingAddress() : smsmsg.getOriginatingAddress();
-
-		    new MessageHandler(context).handle(getDisplayName(source), body);
+		    String body = smsmsg.getDisplayMessageBody();
+		    String source = smsmsg.getDisplayOriginatingAddress();
+		    String displayName = getDisplayName(source, smsmsg.isEmail());
+		    
+		    new MessageHandler(context).handle(displayName, body);
 
 		}
 
@@ -43,14 +44,23 @@ public class SmsListenerService extends Service {
 
     };
 
-    private String getDisplayName(String source) {
-	Cursor c = getContentResolver().query(
-		Data.CONTENT_URI,
-		new String[] { Phone.DISPLAY_NAME },
-		"( " + Data.MIMETYPE + "=? AND " + Phone.NUMBER + "=? ) OR ( "
-			+ Data.MIMETYPE + "=? AND " + Email.ADDRESS + "=? )",
-		new String[] { Phone.CONTENT_ITEM_TYPE, source, Email.CONTENT_ITEM_TYPE, source },
-		null);
+    private String getDisplayName(String source, boolean email) {
+	Cursor c = null;
+	if(email) {
+	    c = getContentResolver().query(
+		    Email.CONTENT_URI,
+		    new String[] { Data.DISPLAY_NAME },
+		    Email.ADDRESS + "=?",
+		    new String[] { source },
+		    null);
+	} else {
+	    c = getContentResolver().query(
+		    Phone.CONTENT_URI,
+		    new String[] { Data.DISPLAY_NAME },
+		    Phone.NUMBER + "=?",
+		    new String[] { source },
+		    null);
+	}
 	try {
 	    if (c != null) {
 		for(c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
