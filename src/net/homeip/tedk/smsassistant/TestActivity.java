@@ -34,6 +34,13 @@ public class TestActivity extends Activity {
 	    }
 	});
 	
+	((Button) findViewById(R.id.testContactResolverButton)).setOnClickListener(new OnClickListener() {
+	    public void onClick(View v) {
+		new AlertDialog.Builder(TestActivity.this).setTitle("7853412805").setMessage(ContactResolver.getDisplayName(TestActivity.this, "7853412805", false)).setNeutralButton("Close", null).show();
+		new AlertDialog.Builder(TestActivity.this).setTitle("tedk9k@gmail.com").setMessage(ContactResolver.getDisplayName(TestActivity.this, "tedk9k@gmail.com", true)).setNeutralButton("Close", null).show();
+	    }
+	});
+	
 	final Button testMessageButton = (Button) findViewById(R.id.testListenerButton);
 	testMessageButton.setOnClickListener(new OnClickListener() {
 	    public void onClick(View v) {

@@ -6,13 +6,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.database.Cursor;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.provider.ContactsContract.CommonDataKinds.Email;
-import android.provider.ContactsContract.CommonDataKinds.Phone;
-import android.provider.ContactsContract.Data;
 import android.telephony.SmsMessage;
 
 public class SmsListenerService extends Service {
@@ -32,7 +28,7 @@ public class SmsListenerService extends Service {
 
 		    String body = smsmsg.getDisplayMessageBody();
 		    String source = smsmsg.getDisplayOriginatingAddress();
-		    String displayName = getDisplayName(source, smsmsg.isEmail());
+		    String displayName = ContactResolver.getDisplayName(context, source, smsmsg.isEmail());
 		    
 		    new MessageHandler(context).handle(displayName, body);
 
@@ -43,41 +39,6 @@ public class SmsListenerService extends Service {
 	}
 
     };
-
-    private String getDisplayName(String source, boolean email) {
-	Cursor c = null;
-	if(email) {
-	    c = getContentResolver().query(
-		    Email.CONTENT_URI,
-		    new String[] { Data.DISPLAY_NAME },
-		    Email.ADDRESS + "=?",
-		    new String[] { source },
-		    null);
-	} else {
-	    c = getContentResolver().query(
-		    Phone.CONTENT_URI,
-		    new String[] { Data.DISPLAY_NAME },
-		    Phone.NUMBER + "=?",
-		    new String[] { source },
-		    null);
-	}
-	try {
-	    if (c != null) {
-		for(c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
-		    String displayName = c.getString(0);
-		    if(displayName != null && displayName.length() > 0) {
-			return displayName;
-		    }
-		}
-	    }
-	} finally {
-	    if (c != null) {
-		c.close();
-	    }
-	}
-	
-	return source;
-    }
 
     @Override
     public void onCreate() {
