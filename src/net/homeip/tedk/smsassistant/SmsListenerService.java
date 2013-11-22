@@ -59,7 +59,7 @@ public class SmsListenerService extends Service {
 			.setSmallIcon(android.R.drawable.sym_def_app_icon)
 			.setContentTitle("SMS Assistant")
 			.setContentText("Running...").setOngoing(true)
-			.getNotification());
+			.build());
 
 	return START_STICKY;
     }
